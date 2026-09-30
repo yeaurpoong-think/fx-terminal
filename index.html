@@ -3,63 +3,145 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>KSECRET FX Terminal</title>
+<title>KSECRET FX Ticker</title>
 <style>
-:root{color-scheme:dark;--bg:#0b1118;--panel:#111b25;--panel2:#162432;--line:#253746;--text:#e7f0f7;--muted:#8095a5;--green:#49d18b;--red:#ff6b72;--blue:#62b1ff;--amber:#f2c96d}
-*{box-sizing:border-box} body{margin:0;background:#080d13;color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Noto Sans KR",sans-serif;font-size:14px;line-height:1.4}
-.shell{max-width:1120px;margin:0 auto;padding:18px 20px 16px;background:linear-gradient(180deg,#0d151e 0%,#0a1017 100%);border:1px solid #1b2a37;border-radius:10px;overflow:hidden;box-shadow:0 12px 32px #0005}
-.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding-bottom:14px}.eyebrow{color:var(--blue);font:700 11px/1.2 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.13em}.title{margin:5px 0 0;font-size:22px;letter-spacing:-.02em}.meta{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:12px;white-space:nowrap}.live{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px #49d18b22}.live.stale{background:var(--amber);box-shadow:0 0 0 4px #f2c96d22}.actions{display:flex;gap:8px;align-items:center}.btn{border:1px solid var(--line);background:#13202c;color:var(--text);border-radius:6px;padding:8px 11px;font:600 12px inherit;cursor:pointer}.btn:hover,.btn:focus-visible{border-color:var(--blue);outline:none;background:#172b3b}.ticker{margin:0 -20px 16px;border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:#091118;overflow:hidden;white-space:nowrap}.ticker-track{display:inline-flex;min-width:100%;animation:scroll 32s linear infinite}.ticker:hover .ticker-track{animation-play-state:paused}.tick{display:inline-flex;gap:9px;align-items:center;padding:9px 26px;border-right:1px solid #1d2c38;font:600 12px ui-monospace,SFMono-Regular,Menlo,monospace}.tick b{color:var(--text)}.up{color:var(--green)}.down{color:var(--red)}.neutral{color:var(--muted)}
-.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.card{background:linear-gradient(145deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:8px;padding:14px;min-width:0}.card-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.pair{font:700 12px ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.06em}.flag{font-size:16px}.label{margin-top:3px;color:var(--muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.value{margin:16px 0 11px;font:700 clamp(22px,3vw,30px)/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:-.06em}.unit{font-size:11px;color:var(--muted);letter-spacing:0}.change{display:inline-flex;gap:6px;align-items:center;font:700 12px ui-monospace,SFMono-Regular,Menlo,monospace}.spark{height:28px;margin-top:13px;display:flex;align-items:end;gap:3px}.bar{flex:1;background:#2c6185;border-radius:2px 2px 0 0;opacity:.8}.bar:nth-child(odd){background:#347d72}.footer{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:14px;color:var(--muted);font-size:11px}.source a{color:var(--blue);text-decoration:none}.source a:hover{text-decoration:underline}.error{color:var(--red)}
-@keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}@media(prefers-reduced-motion:reduce){.ticker-track{animation:none}}@media(max-width:760px){.shell{border-radius:0;border-left:0;border-right:0;padding:16px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ticker{margin-left:-16px;margin-right:-16px}.top{align-items:flex-start}.meta{display:none}.title{font-size:20px}}@media(max-width:420px){.grid{grid-template-columns:1fr 1fr;gap:8px}.card{padding:11px}.value{font-size:21px}.footer{align-items:flex-start;flex-direction:column;gap:4px}}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;background:#000;overflow:hidden}
+  body{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
+  .ticker-wrap{
+    position:fixed;inset:0;
+    display:flex;align-items:center;
+    background:#000;
+    border-top:1px solid #1a1a1a;
+    border-bottom:1px solid #1a1a1a;
+    overflow:hidden;
+    white-space:nowrap;
+  }
+
+  .live-badge{
+    flex:0 0 auto;
+    display:flex;align-items:center;gap:8px;
+    padding:0 22px 0 20px;
+    height:100%;
+    background:#000;
+    border-right:1px solid #222;
+    z-index:2;
+  }
+  .live-dot{
+    width:10px;height:10px;border-radius:50%;
+    background:#ff2b3d;
+    box-shadow:0 0 8px 2px rgba(255,43,61,.6);
+    animation:blink 1.1s ease-in-out infinite;
+  }
+  .live-text{
+    color:#ff2b3d;
+    font-weight:800;
+    font-size:15px;
+    letter-spacing:.12em;
+  }
+  @keyframes blink{
+    0%,100%{opacity:1}
+    50%{opacity:.15}
+  }
+
+  .ticker-track{
+    display:inline-flex;
+    align-items:center;
+    animation:scroll 26s linear infinite;
+    will-change:transform;
+  }
+  .ticker-wrap:hover .ticker-track{animation-play-state:paused}
+
+  .tick{
+    display:inline-flex;align-items:center;gap:10px;
+    padding:0 34px;
+    font-size:17px;
+    font-weight:700;
+    color:#e8e8e8;
+  }
+  .tick .pair{color:#888;font-weight:600;font-size:14px;letter-spacing:.04em}
+  .tick .value{font-size:19px}
+  .tick .arrow{font-size:15px}
+  .up{color:#ff3b3b}
+  .down{color:#3b82ff}
+  .neutral{color:#888}
+
+  @keyframes scroll{
+    from{transform:translateX(0)}
+    to{transform:translateX(-50%)}
+  }
+
+  @media(prefers-reduced-motion:reduce){
+    .ticker-track{animation:none}
+    .live-dot{animation:none}
+  }
 </style>
 </head>
 <body>
-<main class="shell" aria-label="KSECRET 실시간 환율 터미널">
-  <header class="top">
-    <div><div class="eyebrow">KSECRET / FX-MARKET</div><h1 class="title">환율 모니터</h1></div>
-    <div class="actions"><div class="meta"><span class="live" id="liveDot"></span><span id="status">데이터 연결 중</span></div><button class="btn" id="refresh" type="button">↻ 새로고침</button></div>
-  </header>
-  <section class="ticker" aria-label="환율 티커"><div class="ticker-track" id="tickerTrack"></div></section>
-  <section class="grid" id="cards" aria-live="polite"></section>
-  <footer class="footer"><span id="updated">마지막 갱신: —</span><span class="source">Source: <a href="https://www.exchangerate-api.com" target="_blank" rel="noreferrer">ExchangeRate-API / Open Access</a> · 1분 자동 갱신</span></footer>
-</main>
+<div class="ticker-wrap" aria-label="실시간 환율 티커">
+  <div class="live-badge">
+    <span class="live-dot" aria-hidden="true"></span>
+    <span class="live-text">LIVE</span>
+  </div>
+  <div class="ticker-track" id="tickerTrack"></div>
+</div>
 <script>
 const pairs=[
- {key:'USD/KRW',name:'미국 달러',flag:'🇺🇸',code:'USD',digits:2},
- {key:'JPY/KRW',name:'일본 엔',flag:'🇯🇵',code:'JPY',digits:2},
- {key:'EUR/KRW',name:'유로',flag:'🇪🇺',code:'EUR',digits:2},
- {key:'AED/KRW',name:'아랍에미리트 디르함',flag:'🇦🇪',code:'AED',digits:2}
+  {key:'USD/KRW', code:'USD'},
+  {key:'JPY/KRW', code:'JPY'},
+  {key:'EUR/KRW', code:'EUR'},
+  {key:'AED/KRW', code:'AED'}
 ];
 let previous={};
-const $=s=>document.querySelector(s);
-function fmt(n,digits=2){return Number(n).toLocaleString('ko-KR',{minimumFractionDigits:digits,maximumFractionDigits:digits})}
-function timeText(iso){try{return new Intl.DateTimeFormat('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'}).format(new Date(iso))+' KST'}catch{return iso}}
+const track=document.getElementById('tickerTrack');
+
+function fmt(n){
+  return Number(n).toLocaleString('ko-KR',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+
 function render(rows){
- const cards=$('#cards'); const ticks=rows.map(r=>`<span class="tick"><b>${r.key}</b><span>${fmt(r.value)}</span><span class="${r.delta>0?'up':r.delta<0?'down':'neutral'}">${r.delta>0?'▲':r.delta<0?'▼':'—'} ${r.delta===null?'—':Math.abs(r.delta).toFixed(2)+'%'}</span></span>`).join('');
- $('#tickerTrack').innerHTML=ticks+ticks;
- cards.innerHTML=rows.map(r=>{const dir=r.delta>0?'up':r.delta<0?'down':'neutral'; const sign=r.delta>0?'+':''; const bars=Array.from({length:12},(_,i)=>`<i class="bar" style="height:${35+((i*17+r.value*100)%55)}%"></i>`).join(''); return `<article class="card"><div class="card-head"><span class="pair">${r.key}</span><span class="flag" aria-label="${r.name}">${r.flag}</span></div><div class="label">${r.name}</div><div class="value">${fmt(r.value,r.digits)} <span class="unit">KRW</span></div><div class="change ${dir}">${r.delta===null?'—':' '+sign+r.delta.toFixed(2)+'%'} <span class="unit">vs. 직전 갱신</span></div><div class="spark" aria-hidden="true">${bars}</div></article>`}).join('');
+  const one=rows.map(r=>{
+    const dir = r.delta>0?'up':r.delta<0?'down':'neutral';
+    const arrow = r.delta>0?'▲':r.delta<0?'▼':'—';
+    return `<span class="tick">
+      <span class="pair">${r.key}</span>
+      <span class="value ${dir}">${fmt(r.value)}</span>
+      <span class="arrow ${dir}">${arrow}</span>
+    </span>`;
+  }).join('');
+  // duplicate for seamless loop
+  track.innerHTML = one + one;
 }
+
 async function load(){
- $('#status').textContent='데이터 갱신 중'; $('#liveDot').classList.remove('stale');
- const endpoints=[
-  'https://api.exchangerate-api.com/v4/latest/USD',
-  'https://open.er-api.com/v6/latest/USD'
- ];
- let data=null; let lastError=null;
- try{
-  for(const endpoint of endpoints){
-   try{
-    const response=await fetch(endpoint,{cache:'no-store'}); if(!response.ok) throw new Error('HTTP '+response.status);
-    const candidate=await response.json(); if(!candidate.rates?.KRW) throw new Error('KRW 환율 없음');
-    data=candidate; break;
-   }catch(error){lastError=error;}
+  const endpoints=[
+    'https://api.exchangerate-api.com/v4/latest/USD',
+    'https://open.er-api.com/v6/latest/USD'
+  ];
+  let data=null;
+  for(const ep of endpoints){
+    try{
+      const res=await fetch(ep,{cache:'no-store'});
+      if(!res.ok) continue;
+      const cand=await res.json();
+      if(cand.rates?.KRW){ data=cand; break; }
+    }catch(e){}
   }
-  if(!data) throw lastError || new Error('API 응답 없음');
-  const krw=data.rates.KRW; const rows=pairs.map(p=>{const value=p.code==='USD'?krw:krw/data.rates[p.code]; const old=previous[p.key]; const delta=old?((value-old)/old)*100:null; previous[p.key]=value; return {...p,value,delta}});
-  render(rows); $('#status').textContent='LIVE · 공개 환율 데이터'; $('#updated').textContent='마지막 갱신: '+timeText(new Date().toISOString());
- }catch(e){$('#status').textContent='연결 실패 · 재시도 대기'; $('#liveDot').classList.add('stale'); $('#updated').innerHTML='<span class="error">환율 데이터를 불러오지 못했습니다: '+(e?.message||'알 수 없는 오류')+' · 새로고침을 눌러 다시 시도하세요.</span>'; console.warn('FX API error',e)}
+  if(!data) return;
+  const krw=data.rates.KRW;
+  const rows=pairs.map(p=>{
+    const value = p.code==='USD' ? krw : krw/data.rates[p.code];
+    const old = previous[p.key];
+    const delta = old ? value-old : 0;
+    previous[p.key]=value;
+    return {...p, value, delta};
+  });
+  render(rows);
 }
-$('#refresh').addEventListener('click',load); load(); setInterval(load,60000);
+
+load();
+setInterval(load, 15000);
 </script>
 </body>
 </html>
