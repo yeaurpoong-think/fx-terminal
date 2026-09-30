@@ -100,18 +100,44 @@ function fmt(n){
   return Number(n).toLocaleString('ko-KR',{minimumFractionDigits:2,maximumFractionDigits:2});
 }
 
-function render(rows){
-  const one=rows.map(r=>{
+let built=false;
+
+function buildTrack(rows){
+  // 두 벌을 만들어 이어붙여야 -50% 지점에서 이음매 없이 반복됨
+  const halves=[0,1].map(()=>rows.map(r=>{
+    const span=document.createElement('span');
+    span.className='tick';
+    span.dataset.key=r.key;
+    span.innerHTML=`
+      <span class="pair">${r.key}</span>
+      <span class="value neutral">${fmt(r.value)}</span>
+      <span class="arrow neutral">—</span>
+    `;
+    return span;
+  }));
+  track.innerHTML='';
+  halves.flat().forEach(el=>track.appendChild(el));
+  built=true;
+}
+
+function updateTrack(rows){
+  rows.forEach(r=>{
     const dir = r.delta>0?'up':r.delta<0?'down':'neutral';
     const arrow = r.delta>0?'▲':r.delta<0?'▼':'—';
-    return `<span class="tick">
-      <span class="pair">${r.key}</span>
-      <span class="value ${dir}">${fmt(r.value)}</span>
-      <span class="arrow ${dir}">${arrow}</span>
-    </span>`;
-  }).join('');
-  // duplicate for seamless loop
-  track.innerHTML = one + one;
+    track.querySelectorAll(`.tick[data-key="${r.key}"]`).forEach(tick=>{
+      const value=tick.querySelector('.value');
+      const arrowEl=tick.querySelector('.arrow');
+      value.textContent=fmt(r.value);
+      value.className='value '+dir;
+      arrowEl.textContent=arrow;
+      arrowEl.className='arrow '+dir;
+    });
+  });
+}
+
+function render(rows){
+  if(!built){ buildTrack(rows); }
+  updateTrack(rows);
 }
 
 async function load(){
